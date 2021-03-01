@@ -4,6 +4,6 @@
  (libraries mirage-crypto x509 astring bos rresult fpath logs ptime.clock.os)
  (foreign_stubs
   (language c)
+  (flags :standard)
   (names ca_certs_stubs))
-  (c_library_flags -lcrypt32)
- )
+ (c_library_flags -lcrypt32))

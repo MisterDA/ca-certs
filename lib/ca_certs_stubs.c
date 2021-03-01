@@ -1,19 +1,21 @@
-#include "caml/alloc.h"
-#include "caml/memory.h"
+#include <caml/memory.h>
 
+#ifdef _WIN32
+
+#include <caml/alloc.h>
 #include <windows.h>
 
-value ca_certs_windows_trust_anchors_der(value vUnit)
+CAMLprim value ca_certs_windows_trust_anchors_der(value vUnit)
 {
     CAMLparam1(vUnit);
 
     CAMLlocal3(vList, vEncodedCert, vNext);
     vList = Val_int(0);
 
-    HCERTSTORE hCertStore = CertOpenSystemStore(0, "ROOT");
+    HCERTSTORE hCertStore = CertOpenSystemStore(0ULL, "ROOT");
 
-    PCCERT_CONTEXT pCertContext = 0;
-    while ((pCertContext = CertEnumCertificatesInStore(hCertStore, pCertContext)) != 0)
+    PCCERT_CONTEXT pCertContext = NULL;
+    while ((pCertContext = CertEnumCertificatesInStore(hCertStore, pCertContext)) != NULL)
     {
         vEncodedCert = caml_alloc_initialized_string(
             pCertContext->cbCertEncoded,
@@ -28,3 +30,15 @@ value ca_certs_windows_trust_anchors_der(value vUnit)
 
     CAMLreturn(vList);
 }
+
+#else
+
+#include <caml/fail.h>
+
+CAMLprim value ca_certs_windows_trust_anchors_der(value vUnit)
+{
+    CAMLparam1(vUnit);
+    caml_invalid_argument("not implemented");
+}
+
+#endif

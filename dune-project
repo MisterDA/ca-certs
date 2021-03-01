@@ -1,5 +1,6 @@
-(lang dune 2.0)
+(lang dune 2.8)
 (name ca-certs)
+(use_standard_c_and_cxx_flags true)
 
 (generate_opam_files true)
 (source (github mirage/ca-certs))
