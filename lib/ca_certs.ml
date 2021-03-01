@@ -50,10 +50,34 @@ let freebsd_location = "/usr/local/share/certs/ca-root-nss.crt"
 let macos_keychain_location =
   "/System/Library/Keychains/SystemRootCertificates.keychain"
 
+external windows_trust_anchors_der : unit -> string list = "ca_certs_windows_trust_anchors_der"
+
+let rec map_m f l =
+  match l with
+  | [] -> Ok []
+  | x::xs ->
+    let open Rresult.R in
+    f x >>= fun y ->
+    map_m f xs >>| fun ys ->
+    y::ys
+
+let windows_trust_anchors () =
+  let open Rresult.R in
+  let der_list = windows_trust_anchors_der () in
+  let cert_list_result =
+    map_m (fun der ->
+      Cstruct.of_string der
+      |> X509.Certificate.decode_der
+      ) der_list
+  in
+  cert_list_result >>| fun cert_list ->
+  X509.Certificate.encode_pem_multiple cert_list
+  |> Cstruct.to_string
+
 let trust_anchors () =
   let open Rresult.R.Infix in
   if Sys.win32 then
-    Error (`Msg "ca-certs: windows is not supported at the moment")
+    windows_trust_anchors ()
   else
     let cmd = Bos.Cmd.(v "uname" % "-s") in
     Bos.OS.Cmd.(run_out cmd |> out_string |> success) >>= function
